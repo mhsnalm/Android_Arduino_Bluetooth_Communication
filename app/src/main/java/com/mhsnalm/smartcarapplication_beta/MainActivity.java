@@ -57,6 +57,10 @@ public class MainActivity extends AppCompatActivity {
     private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
     private final static int CONNECTING_STATUS = 3; // used in bluetooth handler to identify message status
 
+    private final static String LOCK_CAR = "a";
+    private final static String INLOCK_CAR = "b";
+    private final static String BLINK_CAR_LIGHTS = "c";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        // Door lock/unlock event handlers and validations
         if (mBTArrayAdapter == null) {
             // Device does not support Bluetooth
             mBluetoothStatus.setText("Status: Bluetooth not found");
@@ -112,13 +117,14 @@ public class MainActivity extends AppCompatActivity {
                     if(mConnectedThread != null) //First check to make sure thread created
                     {
                         if(mPowerLock.isChecked())
-                            mConnectedThread.write("a");
+                            mConnectedThread.write(LOCK_CAR);
                         else
-                            mConnectedThread.write("b");
+                            mConnectedThread.write(INLOCK_CAR);
                     }
                 }
             });
 
+            // Bluetooth adapter power on listener
             mBluetoothOnButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -126,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+            // bluetooth adapter power off listener
             mBluetoothOffButton.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View v){
@@ -133,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+            // Blink car light event listener
             mBlinkButton.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View v){
@@ -146,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
 
         if(mConnectedThread != null) //First check to make sure thread created
         {
-            mConnectedThread.write("c");
+            mConnectedThread.write(BLINK_CAR_LIGHTS);
         }
     }
 
@@ -257,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
                             Toast.makeText(getBaseContext(), "Socket creation failed", Toast.LENGTH_SHORT).show();
                         }
                     }
-                    if(fail == false) {
+                    if(!fail) {
                         mConnectedThread = new BluetoothConnection(mBTSocket);
                         mConnectedThread.start();
 
@@ -279,6 +287,8 @@ public class MainActivity extends AppCompatActivity {
         return  device.createRfcommSocketToServiceRecord(BTMODULEUUID);
     }
 
+    // Bluetooth Communication class
+    // Responsible for establishing connection, error control and transmission
     private class BluetoothConnection extends Thread {
         private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
